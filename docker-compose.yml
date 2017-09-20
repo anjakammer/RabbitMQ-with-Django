@@ -1,0 +1,28 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    networks:
+      - 'default'
+  webapp:
+    build:
+      context: webapp
+    image: webapp
+    volumes:
+      - './webapp:/webappDev'
+    working_dir: "/webappDev"
+    ports:
+      - "8000:8000"
+    networks:
+      - 'default'
+    depends_on:
+      - db
+    command: python3 manage.py runserver 0.0.0.0:8000
+  rabbitmq:
+    image: rabbitmq:3.6.12
+    hostname: rabbitmq
+    networks:
+      - 'default'
+
+networks:
+  default:
