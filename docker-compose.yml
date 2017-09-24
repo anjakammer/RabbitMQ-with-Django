@@ -2,6 +2,9 @@ version: '3'
 services:
   db:
     image: postgres
+    ports:
+    - '5432:5432'
+    - '15672:15672'
     networks:
       - 'default'
   webapp:
@@ -23,6 +26,18 @@ services:
     hostname: rabbitmq
     networks:
       - 'default'
+  ocr:
+    build:
+      context: ocr
+    image: ocr
+    volumes:
+      - './ocr:/ocrDev'
+    working_dir: "/ocrDev"
+    depends_on:
+      - rabbitmq
+    networks:
+      - 'default'
+    command: python3 manage.py runserver 0.0.0.0:8080
 
 networks:
   default:

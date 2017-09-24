@@ -8,4 +8,3 @@ RUN pip install -r requirements.txt
 ADD . /webapp/
 
 EXPOSE 80
-CMD echo 'Hello'
