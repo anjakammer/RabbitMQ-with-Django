@@ -3,8 +3,8 @@ services:
   db:
     image: postgres
     ports:
-    - '5432:5432'
-    - '15672:15672'
+      - '5432:5432'
+      - '15672:15672'
     networks:
       - 'default'
   webapp:
@@ -22,8 +22,11 @@ services:
       - db
     command: python3 manage.py runserver 0.0.0.0:8000
   rabbitmq:
-    image: rabbitmq:3.6.12
+    image: rabbitmq:3.6.12-management
     hostname: rabbitmq
+    ports:
+       - "8080:15672"  # management port (guest:guest)
+       - "5672:5672"   # amqp port
     networks:
       - 'default'
   ocr:

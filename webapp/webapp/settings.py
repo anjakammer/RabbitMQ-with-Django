@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'celery'
 ]
 
 MIDDLEWARE = [
@@ -131,5 +130,3 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
-
-CELERY_BROKER_URL = 'amqp://guest:rabbit@rabbitmq:5672'

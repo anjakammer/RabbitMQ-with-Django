@@ -3,4 +3,4 @@ psycopg2
 djangorestframework
 markdown
 django-filter
-celery
+pika
