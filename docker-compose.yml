@@ -20,6 +20,7 @@ services:
       - 'default'
     depends_on:
       - db
+      - rabbitmq
     command: python3 manage.py runserver 0.0.0.0:8000
   rabbitmq:
     image: rabbitmq:3.6.12-management
