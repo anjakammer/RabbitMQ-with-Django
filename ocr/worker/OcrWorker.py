@@ -1,52 +1,57 @@
-import pika, os, time
+import pika, time, json
 
 class OcrWorker():
-    queue_broker = "rabbitmq"
-    queue_name = 'ocr_queue'
-
+    QUEUE_BROKER = "rabbitmq"
+    QUEUE_NAME = 'ocr_queue'
 
     def __init__(self):
-        response = os.system("ping -c 1 " + self.queue_broker)
+        server_down = True
+        while server_down:
+            try:
+                self.__connect()
+                server_down = False
+                print(self.QUEUE_BROKER, 'is up!')
+            except:
+                server_down = True
+                print('Cannot connect to %s try again in 2 Sek.' % self.QUEUE_BROKER)
+                time.sleep(2)
 
-        # and then check the response...
-        while response != 0:
-            print(self.queue_broker, 'ping...')
-            response = os.system("ping -c 1 " + self.queue_broker)
-            time.sleep(2)
+    def __connect(self):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.QUEUE_BROKER))
+        channel = connection.channel()
 
-        print(self.queue_broker, 'is up!')
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.queue_broker))
-        self.channel = self.connection.channel()
+        channel.queue_declare(queue=self.QUEUE_NAME)
 
-        self.channel.queue_declare(queue=self.queue_name)
-
-        self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(self.on_request, queue=self.queue_name)
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(self.__on_request, queue=self.QUEUE_NAME)
 
         print(" [x] Awaiting OCR requests")
-        self.channel.start_consuming()
 
-    def process(self, payload):
+        channel.start_consuming()
+
+    def __process(self, payload):
         # get image
-        image = "some image"
-        return self.get_text(image)
+        self.__get_text(payload)
+        return {
+            "id": "",
+            "image_url": ""
+        }
 
-
-    def get_text(self, image):
+    def __get_text(self, image):
         # do ocr
-        extracted_text = "fertsch"
+        extracted_text = image
         return extracted_text
 
 
-    def on_request(self, ch, method, props, body):
+    def __on_request(self, ch, method, props, body):
         payload = body
 
         print(" [.] processing:" % payload)
-        response = self.process(payload)
+        response = self.__process(payload)
 
         ch.basic_publish(exchange='',
                       routing_key=props.reply_to,
                         properties=pika.BasicProperties(correlation_id= \
                                                          props.correlation_id),
-                        body=str(response))
+                        body=json.dumps(response))
         ch.basic_ack(delivery_tag=method.delivery_tag)
