@@ -11,6 +11,8 @@ services:
     build:
       context: webapp
     image: webapp
+    env_file:
+      - variables.env
     volumes:
       - './webapp:/webappDev'
     working_dir: "/webappDev"
@@ -34,6 +36,8 @@ services:
     build:
       context: ocr
     image: ocr
+    env_file:
+      - variables.env
     volumes:
       - './ocr:/ocrDev'
     working_dir: "/ocrDev"

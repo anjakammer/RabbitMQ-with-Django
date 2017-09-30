@@ -1,8 +1,8 @@
-import pika, uuid, time, json
+import pika, uuid, time, json, os
 
 class OcrClient():
-    QUEUE_BROKER = "rabbitmq"
-    QUEUE_NAME = 'ocr_queue'
+    QUEUE_BROKER = os.getenv('QUEUE_BROKER')
+    QUEUE_NAME = os.getenv('OCR_QUEUE_NAME')
 
     def __init__(self):
         server_down = True
