@@ -1,4 +1,4 @@
-import pika, time, json, os
+import pika, time, json, os, ast
 
 class OcrWorker():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
@@ -27,14 +27,20 @@ class OcrWorker():
 
         print(" [x] Awaiting OCR requests")
 
-        channel.start_consuming()
+        try:
+            channel.start_consuming()
+        except:
+            print(OcrWorker.__name__, 'restarts. Error occurred while listening to', self.QUEUE_BROKER)
 
-    def __process(self, payload):
-        # get image
-        self.__get_text(payload)
+    def __process(self, request):
+        # get image from hash
+        image = request
+        self.__get_text(image)
+        # put result into dict
+        id = request.get('id')
         return {
-            "id": "",
-            "image_url": ""
+            "id": id,
+            "result": "fertiger Text hier"
         }
 
     def __get_text(self, image):
@@ -44,10 +50,12 @@ class OcrWorker():
 
 
     def __on_request(self, ch, method, props, body):
-        payload = body
+        request_string = body.decode('unicode_escape')
+        print(" [.] processing:", request_string)
 
-        print(" [.] processing:" % payload)
-        response = self.__process(payload)
+        request_object = json.loads(request_string)
+
+        response = self.__process(request_object)
 
         ch.basic_publish(exchange='',
                       routing_key=props.reply_to,

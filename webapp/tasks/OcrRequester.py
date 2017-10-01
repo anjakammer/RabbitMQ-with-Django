@@ -1,8 +1,11 @@
 import pika, uuid, time, json, os
+from django.dispatch import Signal
 
-class OcrClient():
+class OcrRequester():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
     QUEUE_NAME = os.getenv('OCR_QUEUE_NAME')
+
+    ocr_finished = Signal(providing_args=["id", "result"])
 
     def __init__(self):
         server_down = True
@@ -30,7 +33,17 @@ class OcrClient():
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def get_text_from_image(self, ocr_request):
+            response_string = body.decode('unicode_escape')
+            dataform = response_string.strip("'<>() ").replace('\'', '\"')
+            response_object = json.loads(dataform)
+
+            id = response_object.get('id')
+            result = response_object.get('result')
+
+            print('received %s' % response_object)
+            self.ocr_finished.send(sender=self.__class__, id=id, result=result)
+
+    def send(self, ocr_request):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         print(" [x] Requesting ocr for %s" % ocr_request)
@@ -45,4 +58,3 @@ class OcrClient():
                                    body=json.dumps(ocr_request))
         while self.response is None:
             self.connection.process_data_events(10)
-        return self.response
