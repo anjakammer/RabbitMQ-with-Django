@@ -45,6 +45,7 @@ class OcrWorker():
 
     def __get_text(self, image):
         # do ocr
+        time.sleep(10)
         extracted_text = image
         return extracted_text
 

@@ -5,13 +5,16 @@ from django.db.models.signals import post_save
 from .OcrRequester import OcrRequester
 
 class Task(models.Model):
+    STATUS_REQUESTED = 'requested'
+    STATUS_PROGRESSING = 'progressing'
+    STATUS_DONE = 'done'
     STATUS = (
-        ('requested', 'Requested'),
-        ('progressing', 'Progressing'),
-        ('done', 'Done'),
+        (STATUS_REQUESTED, 'Requested'),
+        (STATUS_PROGRESSING, 'Progressing'),
+        (STATUS_DONE, 'Done'),
     )
 
-    status = models.CharField(max_length=32, choices=STATUS, default='requested')
+    status = models.CharField(max_length=32, choices=STATUS, default=STATUS_REQUESTED)
     type = models.CharField(max_length=100, default='ocr')
     resource = models.URLField()
     result = models.TextField(blank=True, default='')
@@ -29,7 +32,7 @@ class Task(models.Model):
         print(" [.] Got", result)
         task = Task.objects.get(pk=id)
         task.result = result
-        task.status = 'done'
+        task.status = Task.STATUS_DONE
         task.resolved_at = now()
         task.save()
 
@@ -38,7 +41,7 @@ class Task(models.Model):
 def request_ocr(sender, **kwargs):
     task = kwargs.get('instance')
 
-    if task.status == 'requested':
+    if task.status == Task.STATUS_REQUESTED:
         ocr_requester = OcrRequester()
 
         ocr_request = {
