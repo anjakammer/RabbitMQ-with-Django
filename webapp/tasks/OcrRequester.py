@@ -5,7 +5,8 @@ class OcrRequester():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
     QUEUE_NAME = os.getenv('OCR_QUEUE_NAME')
 
-    ocr_finished = Signal(providing_args=["id", "result"])
+    ocr_finished = Signal(providing_args=["response"])
+    ocr_progressing = Signal(providing_args=["id"])
 
     def __init__(self):
         server_down = True
@@ -28,26 +29,23 @@ class OcrRequester():
 
         self.channel.basic_consume(self.__on_response, no_ack=False,
                                    queue=self.callback_queue)
+        self.channel.confirm_delivery()
 
     def __on_response(self, ch, method, props, body):
         if self.corr_id == props.correlation_id:
             self.response = body
 
             response_string = body.decode('unicode_escape')
-            dataform = response_string.strip("'<>() ").replace('\'', '\"')
-            response_object = json.loads(dataform)
-
-            id = response_object.get('id')
-            result = response_object.get('result')
+            response_object = json.loads(response_string)
 
             print('received %s' % response_object)
-            self.ocr_finished.send(sender=self.__class__, id=id, result=result)
+            self.ocr_finished.send(sender=self.__class__, response=response_object)
 
-    def send(self, ocr_request):
+    def send(self, ocr_request, task_id):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         print(" [x] Requesting ocr for %s" % ocr_request)
-        self.channel.basic_publish(exchange='',
+        request_confirmed = self.channel.basic_publish(exchange='',
                                    routing_key=self.QUEUE_NAME,
                                    properties=pika.BasicProperties(
                                        reply_to=self.callback_queue,
@@ -56,5 +54,10 @@ class OcrRequester():
                                        content_type='application/json',
                                    ),
                                    body=json.dumps(ocr_request))
-        while self.response is None:
-            self.connection.process_data_events(10)
+
+        if request_confirmed:
+            self.ocr_progressing.send(sender=self.__class__, id=task_id)
+            while self.response is None:
+                self.connection.process_data_events(10)
+        else:
+            print('OCR Request with id %d could not be confirmed' % task_id)

@@ -1,4 +1,4 @@
-import pika, time, json, os, ast
+import pika, time, json, os
 
 class OcrWorker():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
