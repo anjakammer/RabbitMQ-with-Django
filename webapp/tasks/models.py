@@ -12,7 +12,7 @@ class Task(models.Model):
 
     status = models.CharField(max_length=32, choices=STATUS, default=STATUS_REQUESTED)
     type = models.CharField(max_length=100, default='ocr')
-    resource = models.URLField()
+    resource = models.CharField(max_length=250)
     result = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now=True)
     resolved_at = models.DateTimeField(null=True, blank=True)

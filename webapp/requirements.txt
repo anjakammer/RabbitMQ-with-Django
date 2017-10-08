@@ -1,5 +1,6 @@
 Django>=1.8,<2.0
 psycopg2
+Pillow
 djangorestframework
 markdown
 django-filter
