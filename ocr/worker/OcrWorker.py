@@ -1,4 +1,5 @@
 import pika, time, json, os
+from .OcrService import OcrService
 
 class OcrWorker():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
@@ -33,22 +34,19 @@ class OcrWorker():
             print(OcrWorker.__name__, 'restarts. Error occurred while listening to', self.QUEUE_BROKER)
 
     def __process(self, request):
-        # get image from hash
-        image = request
-        self.__get_text(image)
-        # put result into dict
-        id = request.get('id')
+        # TODO get image from ipfs hash
+        image_path = 'worker/scan.png'
+        extracted_text = "processing error"
+        try:
+            ocr_service = OcrService()
+            extracted_text = ocr_service.extract_text_from_image(image_path)
+        except BaseException as e:
+            print('Failed to use', OcrService.__name__, 'with error: ', str(e))
+
         return {
-            "id": id,
-            "result": "fertiger Text hier"
+            "id": request.get('id'),
+            "result": extracted_text
         }
-
-    def __get_text(self, image):
-        # do ocr
-        time.sleep(10)
-        extracted_text = image
-        return extracted_text
-
 
     def __on_request(self, ch, method, props, body):
         request_string = body.decode('unicode_escape')
