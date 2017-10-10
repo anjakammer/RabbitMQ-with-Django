@@ -15,6 +15,7 @@ services:
       - variables.env
     volumes:
       - './webapp:/webappDev'
+      - './webapp/data/ipfs:/data/ipfs'
     working_dir: "/webappDev"
     ports:
       - "8000:8000"
@@ -23,7 +24,6 @@ services:
     depends_on:
       - db
       - rabbitmq
-    command: python3 manage.py runserver 0.0.0.0:8000
   rabbitmq:
     image: rabbitmq:3.6.12-management
     hostname: rabbitmq

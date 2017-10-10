@@ -19,7 +19,6 @@ RUN ipfs-update install latest
 # Expose the fs-repo as a volume.
 # start_ipfs initializes an fs-repo if none is mounted
 VOLUME $IPFS_PATH
-RUN ipfs init
 
 WORKDIR /webapp
 ADD requirements.txt /webapp/
@@ -27,3 +26,9 @@ RUN pip install -r requirements.txt
 ADD . /webapp/
 
 EXPOSE 80
+
+# honcho - starts ipdf daemon and django server
+RUN pip install honcho
+ADD Procfile /Procfile
+WORKDIR /
+CMD honcho start
