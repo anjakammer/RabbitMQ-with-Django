@@ -1,2 +1,2 @@
 ipfs: ipfs daemon
-django: python3 manage.py runserver 0.0.0.0:8080
+django: python3 manage.py runserver 0.0.0.0:8000

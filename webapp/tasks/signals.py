@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from .OcrRequester import OcrRequester
 from .models import Task
+from .views import TaskListView
 
 def start_worker(loop):
     asyncio.set_event_loop(loop)
@@ -29,19 +30,19 @@ def write_result(sender, **kwargs):
     task.resolved_at = now()
     task.save()
 
-@receiver(post_save, sender=Task)
+@receiver(TaskListView.request_ocr, sender=TaskListView)
 def request_ocr(sender, **kwargs):
-    task = kwargs.get('instance')
+    task_id = kwargs.get('id')
+    file_hash = kwargs.get('file_hash')
 
-    if task.status == Task.STATUS_REQUESTED:
-        ocr_requester = OcrRequester()
+    ocr_requester = OcrRequester()
 
-        request = {
-            "id": task.id,
-            "image_url": task.resource
-        }
+    request = {
+        "id": task_id,
+        "file_hash": file_hash
+    }
 
-        worker_loop.call_soon_threadsafe(ocr_requester.send, request, task.id)
+    worker_loop.call_soon_threadsafe(ocr_requester.send, request, task_id)
 
 worker_loop = asyncio.new_event_loop()
 worker = Thread(target=start_worker, args=(worker_loop,))
