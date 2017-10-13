@@ -4,3 +4,4 @@ Pillow==3.3.0
 gunicorn==19.6.0
 opencv-python
 pytesseract
+ipfsapi

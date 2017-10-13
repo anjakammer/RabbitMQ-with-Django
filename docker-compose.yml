@@ -40,12 +40,12 @@ services:
       - variables.env
     volumes:
       - './ocr:/ocrDev'
+      - './ocr/data/ipfs:/data/ipfs'
     working_dir: "/ocrDev"
     depends_on:
       - rabbitmq
     networks:
       - 'default'
-    command: python3 manage.py runserver 0.0.0.0:8080
 
 networks:
   default:
