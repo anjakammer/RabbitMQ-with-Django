@@ -2,11 +2,11 @@ from django.db import models
 
 class Task(models.Model):
     STATUS_REQUESTED = 'requested'
-    STATUS_PROGRESSING = 'progressing'
+    STATUS_PENDING = 'pending'
     STATUS_DONE = 'done'
     STATUS = (
         (STATUS_REQUESTED, 'Requested'),
-        (STATUS_PROGRESSING, 'Progressing'),
+        (STATUS_PENDING, 'Pending'),
         (STATUS_DONE, 'Done'),
     )
 

@@ -15,7 +15,7 @@ def start_worker(loop):
 def ocr_request_received(sender, **kwargs):
     id = kwargs.get('id')
     task = Task.objects.get(pk=id)
-    task.status = Task.STATUS_PROGRESSING
+    task.status = Task.STATUS_PENDING
     task.save()
 
 @receiver(OcrRequester.ocr_finished, sender=OcrRequester)

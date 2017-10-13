@@ -12,12 +12,8 @@ class TaskSerializerGet(serializers.Serializer):
     resource = serializers.CharField(read_only=True)
 
 class TaskSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    type = serializers.CharField(read_only=True)
-    status = serializers.CharField(read_only=True)
-    created_at = serializers.DateTimeField(read_only=True)
-    resolved_at = serializers.DateTimeField(read_only=True)
-    result = serializers.CharField(read_only=True)
+    type = serializers.ChoiceField(Task.TYPE_OCR)
+
     resource = serializers.ImageField(max_length=None, allow_empty_file=False, use_url=True)
 
     def create(self, validated_data):
