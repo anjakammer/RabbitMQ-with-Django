@@ -36,13 +36,12 @@ class TaskListView(generics.ListCreateAPIView):
             response =  Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             error_message = {}
-            if task_type != Task.TYPE_OCR:
+            if task_type == None or task_type == 'None':
                 error_message = {Task.KEY_TYPE: ['Please choose a valid request type']}
 
             return Response([serializer.errors, error_message], status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.FILES.get(Task.KEY_RESOURCE)
-        self.__request_ocr_from_resource(task.id, data)
+        self.__process_by_type(request, task.id, task.type)
 
         return response
 
@@ -69,3 +68,8 @@ class TaskListView(generics.ListCreateAPIView):
         task = Task.objects.get(id=id)
         task.resource = file_hash
         task.save()
+
+    def __process_by_type(self, request, task_id, task_type):
+        if task_type == Task.TYPE_OCR:
+            data = request.FILES.get(Task.KEY_RESOURCE)
+            self.__request_ocr_from_resource(task_id, data)
