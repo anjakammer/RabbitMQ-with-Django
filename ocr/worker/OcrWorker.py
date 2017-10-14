@@ -3,7 +3,7 @@ from .OcrService import OcrService
 
 class OcrWorker():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
-    QUEUE_NAME = os.getenv('OCR_QUEUE_NAME')
+    QUEUE_NAME = 'ocr_' + os.getenv('QUEUE_NAME')
 
     def __init__(self):
         server_down = True

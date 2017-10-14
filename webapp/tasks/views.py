@@ -16,7 +16,7 @@ class TaskListView(generics.ListCreateAPIView):
     model = Task
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    request_ocr = Signal(providing_args=["id", "file_hash"])
+    request_processing = Signal(providing_args=["id", "type", "file_hash"])
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -31,26 +31,15 @@ class TaskListView(generics.ListCreateAPIView):
         is_valid = serializer.is_valid()
         task_type = serializer.initial_data.get(Task.KEY_TYPE)
 
-        if is_valid and (task_type == Task.TYPE_OCR):
+        error_message = self.__validate_request_type(task_type)
+
+        if is_valid and (len(error_message) == 0):
             task = serializer.save()
-            response =  Response(serializer.data, status=status.HTTP_201_CREATED)
+            response = Response(serializer.data, status=status.HTTP_201_CREATED)
+            self.__process_by_type(request, task.id, task.type)
+            return response
         else:
-            error_message = {}
-            if task_type == None or task_type == 'None':
-                error_message = {Task.KEY_TYPE: ['Please choose a valid request type']}
-
             return Response([serializer.errors, error_message], status=status.HTTP_400_BAD_REQUEST)
-
-        self.__process_by_type(request, task.id, task.type)
-
-        return response
-
-    def __request_ocr_from_resource(self, task_id, resource_stream):
-        file_hash = self.__get_file_hash_from_stream(resource_stream)
-
-        self.__update_task_resource(task_id, file_hash)
-        self.request_ocr.send(sender=self.__class__, id=task_id, file_hash=file_hash)
-
 
     def __get_file_hash_from_stream(self, data):
         with default_storage.open(self.TMP_FILE_PATH, 'wb+') as destination:
@@ -72,4 +61,20 @@ class TaskListView(generics.ListCreateAPIView):
     def __process_by_type(self, request, task_id, task_type):
         if task_type == Task.TYPE_OCR:
             data = request.FILES.get(Task.KEY_RESOURCE)
-            self.__request_ocr_from_resource(task_id, data)
+            file_hash = self.__get_file_hash_from_stream(data)
+
+            self.__update_task_resource(task_id, file_hash)
+            self.request_processing.send(
+                sender=self.__class__,
+                id=task_id,
+                type=task_type,
+                file_hash=file_hash
+            )
+
+    def __validate_request_type(self, task_type):
+        error_message = {}
+
+        if task_type == None or task_type == 'None':
+            error_message[Task.KEY_TYPE] = ['Please choose a valid request type']
+
+        return error_message
