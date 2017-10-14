@@ -12,12 +12,12 @@ class TaskSerializerGet(serializers.Serializer):
     resource = serializers.CharField(read_only=True)
 
 class TaskSerializer(serializers.Serializer):
-    type = serializers.ChoiceField(Task.TYPE_OCR)
+    type = serializers.ChoiceField((Task.TYPE_OCR, 'None'))
 
     resource = serializers.ImageField(max_length=None, allow_empty_file=False, use_url=True)
 
     def create(self, validated_data):
-        validated_data['resource'] = str(validated_data['resource'])
+        validated_data[Task.KEY_RESOURCE] = str(validated_data[Task.KEY_RESOURCE])
         return Task.objects.create(**validated_data)
 
     def to_representation(self, instance):
@@ -28,8 +28,8 @@ class TaskSerializer(serializers.Serializer):
                 attribute = field.get_attribute(instance)
             except:
                 continue
-            if field.field_name == 'resource':
-                resource = self.fields['resource']
+            if field.field_name == Task.KEY_RESOURCE:
+                resource = self.fields[Task.KEY_RESOURCE]
                 ret[field.field_name] = resource.get_attribute(instance)
             else:
                 ret[field.field_name] = field.to_representation(attribute)

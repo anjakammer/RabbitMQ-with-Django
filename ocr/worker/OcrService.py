@@ -6,7 +6,7 @@ class OcrService():
     CHARS_TO_REMOVE = '[^\w\d_äÄöÖüÜß+\-(){}|\,\.\\n!?<>]+'
 
     def extract_text_from_image(self, image_path):
-        normalized_image = self.__preprocessing(image_path)
+        normalized_image = self.__pre_processing(image_path)
 
         text = pytesseract.image_to_string(Image.open(normalized_image), lang='deu', config=self.TESSDATA_DIR_CONFIG)
 
@@ -20,7 +20,7 @@ class OcrService():
         for resource in args:
             os.remove(resource)
 
-    def __preprocessing(self, source_image):
+    def __pre_processing(self, source_image):
         image = cv2.imread(source_image, 0)
 
         gray = cv2.threshold(image, 0, 255,

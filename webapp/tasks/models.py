@@ -9,9 +9,13 @@ class Task(models.Model):
         (STATUS_PENDING, 'Pending'),
         (STATUS_DONE, 'Done'),
     )
+    TYPE_OCR = 'ocr'
+    KEY_ID = 'id'
+    KEY_TYPE = 'type'
+    KEY_RESOURCE = 'resource'
 
     status = models.CharField(max_length=32, choices=STATUS, default=STATUS_REQUESTED)
-    type = models.CharField(max_length=100, default='ocr')
+    type = models.CharField(max_length=100, default=TYPE_OCR)
     resource = models.CharField(max_length=250)
     result = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now=True)

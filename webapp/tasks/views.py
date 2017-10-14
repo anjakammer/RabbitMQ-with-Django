@@ -9,6 +9,10 @@ import ipfsapi, os
 
 class TaskListView(generics.ListCreateAPIView):
 
+    TMP_FILE_PATH = 'tmp/tmp_file'
+    IPFS_HOST = '127.0.0.1'
+    IPFS_API_PORT = 5001
+
     model = Task
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -24,15 +28,21 @@ class TaskListView(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            response = Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        is_valid = serializer.is_valid()
+        task_type = serializer.initial_data.get(Task.KEY_TYPE)
 
-        task_id = serializer.data.get('id')
-        data = request.FILES.get('resource')
-        self.__request_ocr_from_resource(task_id, data)
+        if is_valid and (task_type == Task.TYPE_OCR):
+            task = serializer.save()
+            response =  Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            error_message = {}
+            if task_type != Task.TYPE_OCR:
+                error_message = {Task.KEY_TYPE: ['Please choose a valid request type']}
+
+            return Response([serializer.errors, error_message], status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.FILES.get(Task.KEY_RESOURCE)
+        self.__request_ocr_from_resource(task.id, data)
 
         return response
 
@@ -44,13 +54,13 @@ class TaskListView(generics.ListCreateAPIView):
 
 
     def __get_file_hash_from_stream(self, data):
-        with default_storage.open('tmp/tmp.png', 'wb+') as destination:
+        with default_storage.open(self.TMP_FILE_PATH, 'wb+') as destination:
             for chunk in data.chunks():
                 destination.write(chunk)
+        tmp_file = os.path.join(settings.MEDIA_ROOT, self.TMP_FILE_PATH)
 
-        tmp_file = os.path.join(settings.MEDIA_ROOT, 'tmp/tmp.png')
-        api = ipfsapi.connect('127.0.0.1', 5001)
-        res = api.add(tmp_file)
+        file_storage = ipfsapi.connect(self.IPFS_HOST, self.IPFS_API_PORT)
+        res = file_storage.add(tmp_file)
         os.remove(tmp_file)
 
         return res.get('Hash')
@@ -59,4 +69,3 @@ class TaskListView(generics.ListCreateAPIView):
         task = Task.objects.get(id=id)
         task.resource = file_hash
         task.save()
-
