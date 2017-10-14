@@ -1,5 +1,7 @@
-import pika, uuid, time, json, os, logging
+import pika, uuid, time, json, os, logging, sys
 from django.dispatch import Signal
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 class TaskProcessingService():
     QUEUE_BROKER = os.getenv('QUEUE_BROKER')
@@ -14,7 +16,7 @@ class TaskProcessingService():
             try:
                 self.__connect()
                 server_down = False
-                logging.info(self.QUEUE_BROKER, 'is up!')
+                logging.info('%s is up!', self.QUEUE_BROKER)
             except:
                 server_down = True
                 logging.warning('Cannot connect to %s try again in 2 Sec.', self.QUEUE_BROKER)
